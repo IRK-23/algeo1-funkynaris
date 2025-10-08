@@ -1,9 +1,9 @@
 package algeo.modules;
 
 public final class Determinan {
-    private static final double EPS = 1e-12;
+    public static final double EPS = 1e-12;
 
-    private Determinan() {} 
+    public Determinan() {} 
     
     // Cek Matriks Persegi
     public static boolean isSquare(double[][] A) {
