@@ -28,7 +28,6 @@ public final class Determinan {
         if (Matrix.isSquare(A) == false) {
             throw new IllegalArgumentException("Matriks harus persegi");
         }else{
-            Matrix.isSquare(A);
             int n = A.getRows();
             Matrix m = A.copy();
             int sign = 1;
