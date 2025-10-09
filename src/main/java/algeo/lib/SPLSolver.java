@@ -75,7 +75,7 @@ public class SPLSolver {
 
   // Metode Invers Matriks
   public Matrix solveWithInverse(Matrix a, Matrix b) {
-    Matrix a_inv = Invers.augment(a);
+    Matrix a_inv = Invers.inversOBE(a);
     if (a_inv == null) {
       System.out.println("Matrix A tidak memiliki invers, metode ini tidak dapat digunakan");
     }

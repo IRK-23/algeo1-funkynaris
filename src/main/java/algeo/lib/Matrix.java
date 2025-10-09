@@ -163,4 +163,16 @@ public class Matrix {
     return minor;
   }
 
+  // Mengembalikan transpose dari matriks ini
+public Matrix transpose() {
+  Matrix result = new Matrix(this.cols, this.rows);
+  for (int i = 0; i < this.rows; i++) {
+    for (int j = 0; j < this.cols; j++) {
+      result.setElement(j, i, this.data[i][j]);
+    }
+  }
+  return result;
+}
+
+
 }
