@@ -60,53 +60,58 @@ public class App {
     // MENU 1 - SISTEM PERSAMAAN LINEAR
     // ===========================================================
     private static void menuSPL() {
-        System.out.println("\n--- SISTEM PERSAMAAN LINEAR ---");
-        System.out.println("1. Eliminasi Gauss");
-        System.out.println("2. Eliminasi Gauss-Jordan");
-        System.out.println("3. Kaidah Cramer");
-        System.out.println("4. Metode Matriks Balikan");
-        System.out.print("Pilih metode: ");
-        int metode = inputInt();
+    System.out.println("\n--- SISTEM PERSAMAAN LINEAR ---");
+    System.out.println("1. Eliminasi Gauss");
+    System.out.println("2. Eliminasi Gauss-Jordan");
+    System.out.println("3. Kaidah Cramer");
+    System.out.println("4. Metode Matriks Balikan");
+    System.out.print("Pilih metode: ");
+    int metode = inputInt();
 
-        Matrix aug = inputMatrix(true);
-        SPLSolver solver = new SPLSolver();
-        String hasil;
+    Matrix aug = inputMatrix(true);
+    SPLSolver solver = new SPLSolver();
+    String hasil;
 
-        switch (metode) {
-            case 1 -> {
-                double[] sol = SPLSolver.solveWithGauss(aug);
-                hasil = arrayToString(sol);
-            }
-            case 2 -> hasil = SPLSolver.solveWithGaussJordan(aug).toString();
-            case 3 -> {
-                Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
-                Matrix b = aug.getColVector(aug.getCols() - 1);
-                double[] sol = solver.solveWithCramer(A, b);
-                hasil = arrayToString(sol);
-            }
-            case 4 -> {
-                Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
-                Matrix b = aug.getColVector(aug.getCols() - 1);
-                Matrix x = solver.solveWithInverse(A, b);
-                hasil = (x == null) ? "Matriks tidak memiliki invers unik" : x.toString();
-            }
-            default -> hasil = "Metode tidak valid!";
+    switch (metode) {
+        case 1 -> {
+            double[] sol = SPLSolver.solveWithGauss(aug);
+            hasil = arrayToString(sol);
         }
-
-        System.out.println("\nHasil SPL:\n" + hasil);
-        String[] output = new String[4];
-        output[0] = "=== HASIL SPL ===";
-        output[1] = "Metode: " + switch (metode) {
-            case 1 -> "Eliminasi Gauss";
-            case 2 -> "Eliminasi Gauss-Jordan";
-            case 3 -> "Kaidah Cramer";
-            case 4 -> "Matriks Balikan";
-            default -> "Tidak valid";
-        };
-        output[2] = "Matriks Awal:\n" + aug.toString();
-        output[3] = "Hasil:\n" + hasil;
-        simpanOutput(output);
+        case 2 -> {
+            Matrix rref = SPLSolver.solveWithGaussJordan(aug);
+            // Menggunakan method baru di SPLSolver untuk format output yang benar
+            hasil = SPLSolver.getSolutionAsString(rref);
+        }
+        case 3 -> {
+            Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
+            Matrix b = aug.getColVector(aug.getCols() - 1);
+            double[] sol = solver.solveWithCramer(A, b);
+            hasil = arrayToString(sol);
+        }
+        case 4 -> {
+            Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
+            Matrix b = aug.getColVector(aug.getCols() - 1);
+            Matrix x = solver.solveWithInverse(A, b);
+            // Menggunakan method helper baru untuk format output yang benar
+            hasil = matrixSolutionToString(x);
+        }
+        default -> hasil = "Metode tidak valid!";
     }
+
+    System.out.println("\nHasil SPL:\n" + hasil);
+    String[] output = new String[4];
+    output[0] = "=== HASIL SPL ===";
+    output[1] = "Metode: " + switch (metode) {
+        case 1 -> "Eliminasi Gauss";
+        case 2 -> "Eliminasi Gauss-Jordan";
+        case 3 -> "Kaidah Cramer";
+        case 4 -> "Matriks Balikan";
+        default -> "Tidak valid";
+    };
+    output[2] = "Matriks Awal:\n" + aug.toString();
+    output[3] = "Hasil:\n" + hasil;
+    simpanOutput(output);
+}
 
     // ===========================================================
     // MENU 2 - DETERMINAN
@@ -374,6 +379,16 @@ public class App {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < arr.length; i++)
             sb.append(String.format("x%d = %.6f\n", i + 1, arr[i]));
+        return sb.toString();
+    }
+
+    /** Mengubah matriks solusi (vektor kolom) menjadi format string */
+    private static String matrixSolutionToString(Matrix x) {
+        if (x == null) return "Matriks tidak memiliki invers unik atau solusi tidak dapat ditemukan.";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < x.getRows(); i++) {
+            sb.append(String.format("x%d = %.6f\n", i + 1, x.getElement(i, 0)));
+        }
         return sb.toString();
     }
 

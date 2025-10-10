@@ -242,5 +242,98 @@ public class SPLSolver {
     }
   }
 
+  public static String getSolutionAsString(Matrix rrefMatrix) {
+    if (rrefMatrix == null) {
+        return "Proses eliminasi gagal menghasilkan matriks.";
+    }
+    int rows = rrefMatrix.getRows();
+    int varCount = rrefMatrix.getCols() - 1;
+    StringBuilder result = new StringBuilder();
+
+    // Mengecek kasus tidak ada solusi
+    for (int i = 0; i < rows; i++) {
+        boolean isAllZeroInVar = true;
+        for (int j = 0; j < varCount; j++) {
+            if (!Matrix.isZero(rrefMatrix.getElement(i, j))) {
+                isAllZeroInVar = false;
+                break;
+            }
+        }
+        if (isAllZeroInVar && !Matrix.isZero(rrefMatrix.getElement(i, varCount))) {
+            return "Sistem persamaan linear tidak memiliki solusi.\n";
+        }
+    }
+
+    // Mengidentifikasi kolom pivot
+    boolean[] isPivotColumn = new boolean[varCount];
+    int[] pivotRowForCol = new int[varCount];
+    java.util.Arrays.fill(pivotRowForCol, -1);
+    int pivotCount = 0;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < varCount; j++) {
+            // Cek apakah ini leading one
+            if (Math.abs(rrefMatrix.getElement(i, j) - 1.0) < Matrix.EPS) {
+                isPivotColumn[j] = true;
+                pivotRowForCol[j] = i;
+                pivotCount++;
+                break; // Pindah ke baris berikutnya setelah menemukan pivot
+            }
+            // Jika menemukan elemen non-nol sebelum leading one, ini bukan RREF sejati
+            else if (!Matrix.isZero(rrefMatrix.getElement(i, j))) {
+                break;
+            }
+        }
+    }
+
+    if (pivotCount == varCount) {
+        result.append("Solusi Unik:\n");
+        for (int j = 0; j < varCount; j++) {
+            result.append(String.format("x%d = %.6f\n", (j + 1), rrefMatrix.getElement(j, varCount)));
+        }
+    } else {
+        result.append("Banyak Solusi (Solusi Parametrik):\n");
+        String[] parameterName = {"t", "s", "r", "p", "q"};
+        int paramIdx = 0;
+        String[] solutions = new String[varCount];
+
+        for (int j = 0; j < varCount; j++) {
+            if (!isPivotColumn[j]) {
+                solutions[j] = parameterName[paramIdx++];
+            }
+        }
+
+        for (int j = varCount - 1; j >= 0; j--) {
+            if (isPivotColumn[j]) {
+                int pivotRow = pivotRowForCol[j];
+                StringBuilder sb = new StringBuilder();
+                double constant = rrefMatrix.getElement(pivotRow, varCount);
+                if (!Matrix.isZero(constant)) {
+                    sb.append(String.format("%.3f", constant));
+                }
+
+                for (int k = j + 1; k < varCount; k++) {
+                    if (!isPivotColumn[k]) {
+                        double coefficient = rrefMatrix.getElement(pivotRow, k);
+                        if (!Matrix.isZero(coefficient)) {
+                            if (sb.length() > 0) {
+                                sb.append((-coefficient > 0) ? " + " : " - ");
+                            } else if (-coefficient < 0) {
+                                sb.append("-");
+                            }
+                            sb.append(String.format("%.3f%s", Math.abs(coefficient), solutions[k]));
+                        }
+                    }
+                }
+                if (sb.length() == 0) sb.append("0.000");
+                solutions[j] = sb.toString();
+            }
+        }
+        for (int i = 0; i < varCount; i++) {
+            result.append(String.format("x%d = %s\n", (i + 1), solutions[i]));
+        }
+    }
+    return result.toString();
+}
+
   
 }
