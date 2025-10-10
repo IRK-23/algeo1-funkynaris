@@ -5,7 +5,7 @@ package algeo.lib;
  * 1. Metode Adjoin (Kofaktor)
  * 2. Metode OBE (Gauss–Jordan)
  *
- * Keduanya telah diperkuat untuk mendeteksi kasus singular dan parametrik.
+ * Dilengkapi deteksi matriks singular dan penanganan error numerik.
  */
 public final class Invers {
 
@@ -23,15 +23,16 @@ public final class Invers {
         A.display();
 
         double detA = Determinan.detKofaktor(A);
-        System.out.printf("\nDeterminan(A) = %.6f\n", detA);
+        System.out.printf("\nDeterminan(A) = %.10f\n", detA);
 
-        if (Matrix.isZero(detA)) {
+        // Gunakan toleransi untuk floating point
+        if (Math.abs(detA) < 1e-10) {
             System.out.println(" Matriks singular — determinan nol, tidak memiliki invers unik.");
             return null;
         }
 
         int n = A.getRows();
-        Matrix adj = new Matrix(n, n);
+        Matrix cofactor = new Matrix(n, n);
 
         System.out.println("\n Langkah-langkah pembentukan matriks kofaktor:");
         for (int i = 0; i < n; i++) {
@@ -40,19 +41,26 @@ public final class Invers {
                 double detMinor = Determinan.detKofaktor(minor);
                 double sign = ((i + j) % 2 == 0) ? 1.0 : -1.0;
                 double cof = sign * detMinor;
-                adj.setElement(j, i, cof); // langsung transpose
+                cofactor.setElement(i, j, cof); // simpan dulu tanpa transpose
                 System.out.printf("Cofaktor C[%d][%d] = %.6f (minor det = %.6f)\n", i + 1, j + 1, cof, detMinor);
             }
         }
 
-        System.out.println("\n Matriks Adjoin (Transpose dari Kofaktor):");
+        System.out.println("\n Matriks Kofaktor:");
+        cofactor.display();
+
+        // Transpose matriks kofaktor menjadi adjoin
+        Matrix adj = cofactor.transpose();
+        System.out.println("\n Matriks Adjoin (transpose dari kofaktor):");
         adj.display();
 
+        // Invers = (1/det(A)) * adj(A)
         Matrix inv = new Matrix(n, n);
+        double scale = 1.0 / detA;
         System.out.println("\n Langkah akhir: Invers = (1/det(A)) * Adjoin(A)");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                inv.setElement(i, j, adj.getElement(i, j) / detA);
+                inv.setElement(i, j, adj.getElement(i, j) * scale);
             }
         }
 
@@ -87,65 +95,47 @@ public final class Invers {
         System.out.println("\n Matriks Augmentasi [A | I]:");
         aug.display();
 
-        // Proses Gauss–Jordan dengan deteksi singularitas
+        // Proses Gauss–Jordan dengan pivoting
         for (int i = 0; i < n; i++) {
-            // Pivoting
+            // Cari pivot terbesar (untuk stabilitas numerik)
             int pivot = i;
-            while (pivot < n && Matrix.isZero(aug.getElement(pivot, i))) {
-                pivot++;
+            double max = Math.abs(aug.getElement(i, i));
+            for (int r = i + 1; r < n; r++) {
+                double val = Math.abs(aug.getElement(r, i));
+                if (val > max) {
+                    max = val;
+                    pivot = r;
+                }
             }
 
-            if (pivot == n) {
-                System.out.printf("\n Kolom %d tidak memiliki pivot. Matriks tidak memiliki invers (kasus parametrik/singular).\n", i + 1);
+            if (Matrix.isZero(max)) {
+                System.out.printf("\nKolom %d tidak memiliki pivot. Matriks singular.\n", i + 1);
                 return null;
             }
 
             if (pivot != i) {
-                System.out.printf("\n Menukar baris R%d dengan R%d karena pivot nol.\n", i + 1, pivot + 1);
+                System.out.printf("\nMenukar baris R%d dengan R%d (pivoting)\n", i + 1, pivot + 1);
                 aug.swapRows(i, pivot);
                 aug.display();
             }
 
             // Normalisasi pivot
             double pivotVal = aug.getElement(i, i);
-            if (Matrix.isZero(pivotVal)) {
-                System.out.printf("\n Pivot di baris %d masih nol, matriks tidak dapat dibalik.\n", i + 1);
-                return null;
-            }
-
-            System.out.printf("\nNormalisasi pivot R%d dengan membagi seluruh baris dengan %.6f\n", i + 1, pivotVal);
             aug.multiplyRow(i, 1.0 / pivotVal);
+            System.out.printf("\nNormalisasi pivot R%d dengan %.10f\n", i + 1, pivotVal);
             aug.display();
 
-            // Eliminasi kolom atas dan bawah pivot
+            // Eliminasi kolom lainnya
             for (int k = 0; k < n; k++) {
                 if (k != i) {
                     double factor = aug.getElement(k, i);
                     if (!Matrix.isZero(factor)) {
-                        System.out.printf("Eliminasi R%d -> R%d = R%d - (%.6f)*R%d\n", k + 1, k + 1, k + 1, factor, i + 1);
                         aug.addMultiplyOfRow(k, i, -factor);
+                        System.out.printf("Eliminasi: R%d = R%d - (%.6f)*R%d\n", k + 1, k + 1, factor, i + 1);
                         aug.display();
                     }
                 }
             }
-        }
-
-        // Cek apakah sisi kiri sudah menjadi identitas
-        boolean isIdentity = true;
-        for (int i = 0; i < n && isIdentity; i++) {
-            for (int j = 0; j < n; j++) {
-                double val = aug.getElement(i, j);
-                if ((i == j && Math.abs(val - 1.0) > 1e-9) ||
-                    (i != j && Math.abs(val) > 1e-9)) {
-                    isIdentity = false;
-                    break;
-                }
-            }
-        }
-
-        if (!isIdentity) {
-            System.out.println("\n Matriks gagal menjadi identitas sempurna di sisi kiri — kemungkinan parametrik atau singular.");
-            return null;
         }
 
         System.out.println("\n===== Matriks telah direduksi menjadi [I | A⁻¹] =====");
