@@ -1,13 +1,61 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/M53Bs6Dv)
 # Aljabar Linier dan Geometri Tubes 1 Template
+Proyek ini mengimplementasikan algoritma-algoritma aljabar linier secara modular dalam bahasa Java:
+1. SPL: Eliminasi Gauss, Gauss–Jordan, Cramer, dan Matriks Balikan
+2. Determinan: Ekspansi Kofaktor, Reduksi Baris
+3. Invers: Adjoin (Kofaktor), Augment (OBE/Gauss–Jordan)
+4. Interpolasi: Polinomial (Vandermonde), Splina Bézier Kubik
+5. Regresi: Regresi Polinomial Berganda (Least Squares / Persamaan Normal)
+Semua fitur tersedia sebagai library (class publik) dan juga melalui CLI (program utama) untuk membaca input dari konsol atau file, serta menyimpan hasil ke file .txt.
 
-## About this template
+## Panduan Program
+1. Pilih jenis masalah
+      1) SPL 2) Determinan 3) Invers 4) Interpolasi 5) Regresi 0) Keluar
+2. Pilih metode (bergantung jenis masalah, mis. Gauss/Gauss–Jordan/Cramer/Inverse untuk SPL)
+3. Input data
+   - Dari konsol: ketik dimensi & elemen
+   - Dari file: path ke file teks berformat matriks (baris dipisah newline, elemen dipisah spasi)
+5. Proses & tampilkan hasil
+  - Cetak hasil di konsol (dan langkah OBE jika diminta)
+  - Simpan hasil ke file output .txt
+  - Ulang (program kembali ke menu utama)
+  - Catatan: Untuk SPL, program mendeteksi jenis solusi (unik/tak hingga/tak ada) dan membangun solusi parametrik bila ada variabel bebas.
 
-This template is the starter file structure for Tubes 1 Algeo 2025/2026. This template is a Java project using Maven Build tool with JavaFX GUI already configured in pom.xml.
+## Format Input
+Rincian Umum
+    - Semua modul menerima input manual (diketik) atau melalui satu berkas .txt.
+    - Pemisah bilangan: spasi tunggal (disarankan desimal .).
+    - Error handling wajib: apabila format isi file tidak sesuai spesifikasi, program harus menolak dengan pesan yang jelas.
+    - Nama file hanya deskripsi; jangan gunakan nama file sebagai dasar validasi isi.
+    - Setiap modul dapat menyimpan hasil ke .txt (memuat: metode, input, dan hasil).
+A. Sistem Persamaan Linier (SPL)
+Input:
+  - Matriks augmented SPL melalui ketik manual atau file .txt.
+  - Metode: sesuai daftar (Gauss, Gauss–Jordan, Cramer, Balikan).
 
-In this project, you can choose if you want to develop to CLI or GUI app. The default is CLI, if you want GUI do uncomment the necessary part in App.java to run the template GUI test then run the commands below to run the app.
+B. Determinan
+Input:
+  - Matriks persegi melalui ketik/file .txt.
+  - Metode: Kofaktor / Reduksi Baris.
 
-## Requirements
+C. Matriks Balikan (Invers)
+Input:
+  - Matriks persegi melalui ketik/file .txt.
+  - Metode: Adjoin (Kofaktor) / Augment (OBE).
+
+D. Interpolasi
+Input:
+  - Jumlah titik n.
+  - Data titik (x1, y1), …, (xn, yn) via ketik/file.
+  - Metode: (1) Polinomial (Vandermonde) atau (2) Splina Bézier Kubik.
+
+E. Regresi Polinomial Berganda
+Input:
+  - Jumlah sampel n.
+  - Derajat regresi m.
+  - Sampel: (x_{i,1}, …, x_{i,k}, y_i) dengan k ≤ 5 (via ketik/file).
+
+
+## Requirements ( Java and Maven)
 
 Before building and running the **Matrix Calculator**, make sure you have the following installed:
 
@@ -88,7 +136,3 @@ when the program is first run, it should print in terminal:
 Hai 
 Halo Algeo!
 ```
-
-## Using the program as a library
-
-Copy the .jar file that is in the `target` file (from running `mvn clean compile`) to `bin` for submission, this .jar file can be used in other projects to import modules in this current project
