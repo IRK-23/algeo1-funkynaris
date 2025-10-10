@@ -13,7 +13,9 @@ public class Regresi {
     private static List<int[]> generateBasis(int p, int degree) {
         List<int[]> out = new ArrayList<>();
         int[] cur = new int[p];
-        gen(0, p, degree, cur, out);
+        for (int d = 0; d <= degree; d++) {
+            gen(0, p, d, cur, out);  
+        }
         return out;
     }
     private static void gen(int idx, int p, int rem, int[] cur, List<int[]> out) {
@@ -51,9 +53,6 @@ public class Regresi {
             Xinv.display();
             System.out.println("Matriks di atas akan dikalikan dengan Matriks di bawah ini: ");
             result.display();
-            if (result == null) {
-                throw new IllegalStateException("Perkalian matriks gagal (cek dimensi).");
-            }
             return result;
         } catch (ArithmeticException e) {
             // Tanpa invers
@@ -98,12 +97,12 @@ public class Regresi {
             double val = koef.getElement(i, 0);
             String var = basisString.get(i);
             if (i == 0) {
-                res.append(String.format("%.3f", val,var));
+                res.append(String.format("%.3f", val));
             } else {
                 if (val >= 0) {
                     res.append(" + ").append(String.format("%.3f * %s", val, var));
                 } else {
-                    res.append(" - ").append(String.format("%.3f * %s", val, var));
+                    res.append(" - ").append(String.format("%.3f * %s", Math.abs(val), var));
                 }
             }
         }
