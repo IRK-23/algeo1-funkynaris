@@ -34,18 +34,23 @@ public class Regresi {
         int var = X.getCols();
         this.basisPol = generateBasis(var, degree);
         // Buat Matriks Desain dan Matriks Yang lainnya
+        System.out.println("Membuat Matriks Desain..."); // Tahap nomor 1
         Matrix design = designMatrix(X, degree, var);
+        design.display();
         Matrix Xt = design.transpose();
         Matrix XtX = Matrix.multiply(Xt,design);
         Matrix Xty = Matrix.multiply(Xt,Y);
         if (XtX == null || Xty == null) {
             throw new IllegalStateException("Perkalian matriks gagal (cek dimensi).");
         }
-
+        System.out.println("Perkalian Matriks sesuai dengan persamaan..."); // Tahap nomor 2
         // Hitung totalnya dengan Error Handling
         try {
             Matrix Xinv = Invers.inversOBE(XtX);
             Matrix result = Matrix.multiply(Xinv, Xty);
+            Xinv.display();
+            System.out.println("Matriks di atas akan dikalikan dengan Matriks di bawah ini: ");
+            result.display();
             if (result == null) {
                 throw new IllegalStateException("Perkalian matriks gagal (cek dimensi).");
             }

@@ -8,14 +8,22 @@ public final class Determinan {
         }else{
             int n = A.getRows();
             // Basis
-            if (n == 1) return A.getElement(0, 0);
-            if (n == 2) return (A.getElement(0, 0))*(A.getElement(1, 1)) - (A.getElement(0, 1))*(A.getElement(1, 0));
+            if (n == 1) {
+                System.out.println("Determinan matriks 1x1 adalah elemen itu sendiri");
+                return A.getElement(0, 0);
+            }
+            if (n == 2) {
+                System.out.println("Determinan matriks 2x2 dihitung dengan rumus ad - bc");
+                return (A.getElement(0, 0))*(A.getElement(1, 1)) - (A.getElement(0, 1))*(A.getElement(1, 0));
+            }
             // Rekurens
             double det = 0.0;
             for (int i = 0; i < n; i++) {
                 double a0 = A.getElement(0, i);
                 if (Matrix.isZero(a0)) continue;
+                System.out.println("Pembuatan Matriks Minor");
                 Matrix minor = Matrix.minorOf(A, 0, i);
+                minor.display();
                 double kof = ((i % 2 == 0) ? +1.0 : -1.0) * a0 * detKofaktor(minor);
                 det += kof;
             }
