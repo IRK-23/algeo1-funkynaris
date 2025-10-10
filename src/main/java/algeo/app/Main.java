@@ -7,7 +7,7 @@ import algeo.lib.*;
 /**
  * Kelas Main menjalankan program utama Tugas Besar 1 IF2123 Aljabar Linier dan Geometri.
  * Menyediakan fitur:
- * 1. Sistem Persamaan Linear
+ * 1. Sistem Persamaan Linear (SPL)
  * 2. Determinan
  * 3. Matriks Balikan
  * 4. Interpolasi (Polinomial dan Bézier)
@@ -18,8 +18,12 @@ import algeo.lib.*;
 public class Main {
 
     private static final Scanner sc = new Scanner(System.in);
+    private static final String OUTPUT_FOLDER = "output";
+    private static final String OUTPUT_FILE = OUTPUT_FOLDER + "/hasil.txt";
 
     public static void main(String[] args) {
+        buatFolderOutput();
+
         while (true) {
             System.out.println("\n=== MENU UTAMA ===");
             System.out.println("1. Sistem Persamaan Linier (SPL)");
@@ -79,13 +83,13 @@ public class Main {
                 Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
                 Matrix b = aug.getColVector(aug.getCols() - 1);
                 Matrix x = solver.solveWithInverse(A, b);
-                hasil = (x == null) ? "Matriks tidak memiliki invers" : x.toString();
+                hasil = (x == null) ? "Matriks tidak memiliki invers unik" : x.toString();
             }
             default -> hasil = "Metode tidak valid!";
         }
 
         System.out.println("\nHasil SPL:\n" + hasil);
-        simpanOutput("SPL", hasil);
+        simpanOutput("=== HASIL SPL ===\n" + hasil);
     }
 
     // ===========================================================
@@ -104,7 +108,7 @@ public class Main {
                 : Determinan.detReduksiBaris(A);
 
         System.out.println("Determinan = " + hasil);
-        simpanOutput("Determinan", String.valueOf(hasil));
+        simpanOutput("=== HASIL DETERMINAN ===\nDeterminan = " + hasil);
     }
 
     // ===========================================================
@@ -118,13 +122,26 @@ public class Main {
         int metode = inputInt();
 
         Matrix A = inputMatrix(false);
-        Matrix hasil;
+        Matrix hasil = null;
 
         try {
-            hasil = (metode == 1) ? Invers.inversOBE(A) : Invers.inversAdjoin(A);
-            System.out.println("Invers Matriks:\n");
+            if (metode == 1) hasil = Invers.inversOBE(A);
+            else if (metode == 2) hasil = Invers.inversAdjoin(A);
+            else {
+                System.out.println("Pilihan tidak valid.");
+                return;
+            }
+
+            if (hasil == null) {
+                System.out.println("\n Matriks tidak memiliki invers unik (singular).");
+                simpanOutput("=== HASIL INVERS ===\nMatriks tidak memiliki invers unik.");
+                return;
+            }
+
+            System.out.println("\n Invers Matriks:");
             hasil.display();
-            simpanOutput("Invers", hasil.toString());
+            simpanOutput("=== HASIL INVERS ===\n" + hasil.toString());
+
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -141,7 +158,6 @@ public class Main {
         int metode = inputInt();
 
         if (metode == 1) {
-            // Interpolasi Polinomial
             System.out.print("Masukkan jumlah titik data: ");
             int n = inputInt();
             double[] x = new double[n];
@@ -168,29 +184,25 @@ public class Main {
             double yEval = Interpolasi.evaluatePolynomial(coeff, xEval);
             System.out.printf("P(%.4f) = %.6f\n", xEval, yEval);
 
-            String hasil = coeff.toString() + "\nP(" + xEval + ") = " + yEval;
-            simpanOutput("InterpolasiPolinomial", hasil);
+            simpanOutput("=== HASIL INTERPOLASI POLINOMIAL ===\n" + coeff.toString() +
+                    "\nP(" + xEval + ") = " + yEval);
 
         } else if (metode == 2) {
-            // Interpolasi Bézier Kubik
             System.out.print("Masukkan jumlah titik sampel: ");
             int n = inputInt();
-            double[][] titik = new double[n][2];
+            Matrix titik = new Matrix(n, 2);
+
             for (int i = 0; i < n; i++) {
                 System.out.print("x" + (i + 1) + " y" + (i + 1) + ": ");
-                titik[i][0] = sc.nextDouble();
-                titik[i][1] = sc.nextDouble();
+                titik.setElement(i, 0, sc.nextDouble());
+                titik.setElement(i, 1, sc.nextDouble());
             }
 
-            double[][] B = Interpolasi.interpolasiBezierKubik(titik);
+            Matrix B = Interpolasi.interpolasiBezierKubik(titik);
             if (B != null) {
-                Interpolasi.printBezierPoints(B);
-                StringBuilder sb = new StringBuilder();
-                sb.append("Titik Kontrol Bézier Kubik:\n");
-                for (int i = 0; i < B.length; i++) {
-                    sb.append(String.format("B%d = (%.4f, %.4f)\n", i, B[i][0], B[i][1]));
-                }
-                simpanOutput("InterpolasiBezier", sb.toString());
+                System.out.println("\nTitik Kontrol Bézier Kubik:");
+                B.display();
+                simpanOutput("=== HASIL INTERPOLASI BÉZIER ===\n" + B.toString());
             }
         } else {
             System.out.println("Pilihan tidak valid.");
@@ -209,17 +221,14 @@ public class Main {
         System.out.print("Masukkan derajat polinomial: ");
         int d = inputInt();
 
-        double[][] xData = new double[n][k];
-        double[][] yData = new double[n][1];
+        Matrix X = new Matrix(n, k);
+        Matrix Y = new Matrix(n, 1);
 
         for (int i = 0; i < n; i++) {
             System.out.print("Data ke-" + (i + 1) + " (" + k + " x dan 1 y): ");
-            for (int j = 0; j < k; j++) xData[i][j] = sc.nextDouble();
-            yData[i][0] = sc.nextDouble();
+            for (int j = 0; j < k; j++) X.setElement(i, j, sc.nextDouble());
+            Y.setElement(i, 0, sc.nextDouble());
         }
-
-        Matrix X = new Matrix(xData);
-        Matrix Y = new Matrix(yData);
 
         Regresi regresi = new Regresi();
         Matrix koef = regresi.regresi(X, Y, d);
@@ -227,15 +236,20 @@ public class Main {
         System.out.println("\nHasil Regresi:");
         Regresi.printHasil(koef, regresi.getBasis());
 
-        StringBuilder hasil = new StringBuilder();
-        hasil.append("Koefisien Regresi:\n").append(koef.toString());
-        simpanOutput("Regresi", hasil.toString());
+        simpanOutput("=== HASIL REGRESI POLINOMIAL ===\n" + koef.toString());
     }
 
     // ===========================================================
     // UTILITAS INPUT/OUTPUT
     // ===========================================================
 
+    /** Membuat folder output jika belum ada */
+    private static void buatFolderOutput() {
+        File folder = new File(OUTPUT_FOLDER);
+        if (!folder.exists()) folder.mkdirs();
+    }
+
+    /** Membaca matriks dari input manual atau file */
     private static Matrix inputMatrix(boolean augmented) {
         System.out.println("1. Input manual");
         System.out.println("2. Baca dari file .txt");
@@ -247,12 +261,15 @@ public class Main {
             int m = inputInt();
             System.out.print("Masukkan jumlah kolom: ");
             int n = inputInt();
-            double[][] data = new double[m][n];
+            Matrix M = new Matrix(m, n);
+
             for (int i = 0; i < m; i++) {
                 System.out.print("Baris ke-" + (i + 1) + ": ");
-                for (int j = 0; j < n; j++) data[i][j] = sc.nextDouble();
+                for (int j = 0; j < n; j++) {
+                    M.setElement(i, j, sc.nextDouble());
+                }
             }
-            return new Matrix(data);
+            return M;
         } else {
             System.out.print("Masukkan path file: ");
             String path = sc.next();
@@ -265,20 +282,18 @@ public class Main {
         }
     }
 
-    private static void simpanOutput(String prefix, String isi) {
-        System.out.print("Apakah hasil ingin disimpan ke file? (y/n): ");
-        if (sc.next().equalsIgnoreCase("y")) {
-            System.out.print("Masukkan nama file: ");
-            String nama = sc.next();
-            try (PrintWriter out = new PrintWriter(prefix + "_" + nama + ".txt")) {
-                out.println(isi);
-                System.out.println("Berhasil disimpan ke " + prefix + "_" + nama + ".txt");
-            } catch (IOException e) {
-                System.out.println("Gagal menyimpan file!");
-            }
+    /** Menyimpan hasil ke dalam file hasil.txt */
+    private static void simpanOutput(String isi) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(OUTPUT_FILE, true))) {
+            out.println(isi);
+            out.println("--------------------------------------------------");
+            System.out.println(" Hasil disimpan ke " + OUTPUT_FILE);
+        } catch (IOException e) {
+            System.out.println(" Gagal menyimpan hasil!");
         }
     }
 
+    /** Membaca integer dari input pengguna dengan validasi */
     private static int inputInt() {
         while (true) {
             try {
@@ -289,6 +304,7 @@ public class Main {
         }
     }
 
+    /** Mengubah array solusi menjadi format string */
     private static String arrayToString(double[] arr) {
         if (arr == null) return "Tidak ada solusi (det = 0)";
         StringBuilder sb = new StringBuilder();
