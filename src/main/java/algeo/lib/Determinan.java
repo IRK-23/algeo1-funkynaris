@@ -39,6 +39,10 @@ public final class Determinan {
             int n = A.getRows();
             Matrix m = A.copy();
             int sign = 1;
+            
+            System.out.println("\n===== Memulai Perhitungan Determinan dengan Reduksi Baris =====");
+            System.out.println("Matriks Awal:");
+            m.display();
 
             for (int i=0; i<n; i++) {
                 // Partial pivoting
@@ -53,20 +57,29 @@ public final class Determinan {
                 }
 
                 if (pick <= Matrix.EPS) {
+                    System.out.println("\nMatriks menjadi singular (diagonal nol), determinan adalah 0.");
                     return 0.0; // Singular matriks - determinan nol
                 }
 
                 if (pivot != i) {
+                    System.out.printf("\nLangkah: Menukar R%d dengan R%d. Tanda determinan dikali -1.\n", i+1, pivot+1);
                     m.swapRows(pivot, i);
                     sign = -sign; // Tukar baris mengubah tanda determinan
+                    m.display();
                 }
 
                 for (int j=i+1; j<n; j++) {
+
                     double factor = m.getElement(j, i) / m.getElement(i, i);
-                    if (Math.abs(factor) > Matrix.EPS) m.addMultiplyOfRow(j, i, -factor);
+                    if (Math.abs(factor) > Matrix.EPS) {
+                        m.addMultiplyOfRow(j, i, -factor);
+                        System.out.printf("\nLangkah: R%d = R%d - (%.3f) * R%d\n", j + 1, j + 1, factor, i + 1);
+                        m.display();
+                    }
                 }
             }
             double det = (sign == 1) ? 1.0 : -1.0;
+            System.out.println("\nMatriks segitiga atas terbentuk. Determinan adalah perkalian diagonal:");
             for (int k=0; k<n; k++) {
                 det *= m.getElement(k, k);
             }
