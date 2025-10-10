@@ -35,7 +35,7 @@ public class App {
             System.out.print("Pilih menu: ");
 
             int pilih = inputInt();
-
+        try {
             switch (pilih) {
                 case 1 -> menuSPL();
                 case 2 -> menuDeterminan();
@@ -48,7 +48,12 @@ public class App {
                 }
                 default -> System.out.println("Pilihan tidak valid!");
             }
+        } catch (Exception e) {
+            System.out.println("\n[!] Terjadi kesalahan dalam pemrosesan: " + e.getMessage());
+            System.out.println("Pastikan input Anda (misal: dimensi matriks) sesuai untuk operasi yang dipilih.");
+            System.out.println("Kembali ke menu utama...");
         }
+    }
     }
 
     // ===========================================================
@@ -213,8 +218,8 @@ public class App {
 
             output[0] = "=== HASIL INTERPOLASI POLINOMIAL ===";
             output[1] = "Metode: Polinomial";
-            output[2] = ""; // Input yang digunakan
-            output[3] = ""; // Domain Interpolasi
+            output[2] = ""; 
+            output[3] = ""; 
             output[4] = "=== HASIL INTERPOLASI POLINOMIAL ===\n" + coeff.toString() + "\nP(" + xEval + ") = " + yEval;
             simpanOutput(output);
 
@@ -235,8 +240,8 @@ public class App {
                 B.display();
                 output[0] = "=== HASIL INTERPOLASI BÉZIER ===";
                 output[1] = "Metode: Bézier Kubik"; 
-                output[2] = "" ; // Input yang digunakan
-                output[3] = "" ; // Domain Interpolasi
+                output[2] = "" ; 
+                output[3] = "" ; 
                 output[4] = "=== HASIL INTERPOLASI BÉZIER ===\n" + B.toString();
                 simpanOutput(output);
             }
@@ -292,35 +297,53 @@ public class App {
 
     /** Membaca matriks dari input manual atau file */
     private static Matrix inputMatrix(boolean augmented) {
-        System.out.println("1. Input manual");
-        System.out.println("2. Baca dari file .txt");
-        System.out.print("Pilih metode input: ");
-        int mode = inputInt();
+        while (true) {
+            System.out.println("1. Input manual");
+            System.out.println("2. Baca dari file .txt");
+            System.out.print("Pilih metode input: ");
+            int mode = inputInt();
 
-        if (mode == 1) {
-            System.out.print("Masukkan jumlah baris: ");
-            int m = inputInt();
-            System.out.print("Masukkan jumlah kolom: ");
-            int n = inputInt();
-            Matrix M = new Matrix(m, n);
-            System.out.println("Masukkan elemen matriks (pisahkan dengan spasi):");
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    String inp = sc.next();
-                    M.setElement(i, j, parseDouble(inp));
-                }
-            }
-            return M;
-        } else {
-            System.out.print("Masukkan path file: ");
-            String path = sc.next();
-            try {
-                return Matrix.fromFile(path);
-            } catch (Exception e) {
-                System.out.println("Gagal membaca file! Pastikan format sesuai.");
-                return new Matrix(0, 0);
+            switch (mode) {
+                case 1:
+                    System.out.print("Masukkan jumlah baris: ");
+                    int m = inputInt();
+                    System.out.print("Masukkan jumlah kolom: ");
+                    int n = inputInt();
+                    Matrix M = new Matrix(m, n);
+                    System.out.println("Masukkan elemen matriks (pisahkan dengan spasi):");
+                    for (int i = 0; i < m; i++) {
+                        for (int j = 0; j < n; j++) {
+                            while (true) {
+                                try {
+                                    String inp = sc.next();
+                                    M.setElement(i, j, parseDouble(inp));
+                                    break;
+                                } catch (NumberFormatException e) {
+                                    System.out.printf("Input harus angka. Coba lagi untuk elemen baris %d, kolom %d: ", i + 1, j + 1);
+                                } catch (ArithmeticException e) {
+                                    System.out.printf("Error: Pembagi nol. Coba lagi untuk elemen baris %d, kolom %d: ", i + 1, j + 1);
+                                }
+                            }
+                        }
+                    }
+                    return M; 
+
+                case 2:
+                    System.out.print("Masukkan path file: ");
+                    String path = sc.next();
+                    try {
+                        return Matrix.fromFile(path); 
+                    } catch (Exception e) {
+                        System.out.println("\n[!] Gagal membaca file! Path salah atau format tidak sesuai. Silakan pilih metode input lagi.\n");
+                    }
+                    break; 
+
+                default:
+                    System.out.println("Pilihan tidak valid. Silakan pilih 1 atau 2.\n");
+                    break; 
             }
         }
+        
     }
 
     /** Menyimpan hasil ke dalam file hasil.txt */
