@@ -1,38 +1,409 @@
 package algeo;
 
-import algeo.modules.ModuleContoh;
+import java.io.*;
+import java.util.*;
+import algeo.lib.*;
 
+/**
+ * Kelas Main menjalankan program utama Tugas Besar 1 IF2123 Aljabar Linier dan Geometri.
+ * Menyediakan fitur:
+ * 1. Sistem Persamaan Linear (SPL)
+ * 2. Determinan
+ * 3. Matriks Balikan
+ * 4. Interpolasi (Polinomial dan Bézier)
+ * 5. Regresi Polinomial
+ *
+ * Seluruh perhitungan dilakukan melalui kelas pada package algeo.lib.
+ */
 public class App {
+
+    private static final Scanner sc = new Scanner(System.in);
+    private static final String OUTPUT_FOLDER = "output";
+    private static final String OUTPUT_FILE = OUTPUT_FOLDER + "/hasil.txt";
+
     public static void main(String[] args) {
-        ModuleContoh m = new ModuleContoh();
-        
-        System.out.println("Hai");
-        m.halo();
-    }    
+        buatFolderOutput();
+
+        while (true) {
+            System.out.println("\n=== MENU UTAMA ===");
+            System.out.println("1. Sistem Persamaan Linier (SPL)");
+            System.out.println("2. Determinan");
+            System.out.println("3. Matriks Balikan");
+            System.out.println("4. Interpolasi");
+            System.out.println("5. Regresi Polinomial");
+            System.out.println("0. Keluar");
+            System.out.print("Pilih menu: ");
+
+            int pilih = inputInt();
+        try {
+            switch (pilih) {
+                case 1 -> menuSPL();
+                case 2 -> menuDeterminan();
+                case 3 -> menuInvers();
+                case 4 -> menuInterpolasi();
+                case 5 -> menuRegresi();
+                case 0 -> {
+                    System.out.println("Terima kasih! Program selesai.");
+                    return;
+                }
+                default -> System.out.println("Pilihan tidak valid!");
+            }
+        } catch (Exception e) {
+            System.out.println("\n[!] Terjadi kesalahan dalam pemrosesan: " + e.getMessage());
+            System.out.println("Pastikan input Anda (misal: dimensi matriks) sesuai untuk operasi yang dipilih.");
+            System.out.println("Kembali ke menu utama...");
+        }
+    }
+    }
+
+    // ===========================================================
+    // MENU 1 - SISTEM PERSAMAAN LINEAR
+    // ===========================================================
+    private static void menuSPL() {
+    System.out.println("\n--- SISTEM PERSAMAAN LINEAR ---");
+    System.out.println("1. Eliminasi Gauss");
+    System.out.println("2. Eliminasi Gauss-Jordan");
+    System.out.println("3. Kaidah Cramer");
+    System.out.println("4. Metode Matriks Balikan");
+    System.out.print("Pilih metode: ");
+    int metode = inputInt();
+
+    Matrix aug = inputMatrix(true);
+    SPLSolver solver = new SPLSolver();
+    String hasil;
+
+    switch (metode) {
+        case 1 -> {
+            double[] sol = SPLSolver.solveWithGauss(aug);
+            hasil = arrayToString(sol);
+        }
+        case 2 -> {
+            Matrix rref = SPLSolver.solveWithGaussJordan(aug);
+            // Menggunakan method baru di SPLSolver untuk format output yang benar
+            hasil = SPLSolver.getSolutionAsString(rref);
+        }
+        case 3 -> {
+            Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
+            Matrix b = aug.getColVector(aug.getCols() - 1);
+            double[] sol = solver.solveWithCramer(A, b);
+            hasil = arrayToString(sol);
+        }
+        case 4 -> {
+            Matrix A = aug.subMatrix(0, 0, aug.getRows(), aug.getCols() - 1);
+            Matrix b = aug.getColVector(aug.getCols() - 1);
+            Matrix x = solver.solveWithInverse(A, b);
+            // Menggunakan method helper baru untuk format output yang benar
+            hasil = matrixSolutionToString(x);
+        }
+        default -> hasil = "Metode tidak valid!";
+    }
+
+    System.out.println("\nHasil SPL:\n" + hasil);
+    String[] output = new String[4];
+    output[0] = "=== HASIL SPL ===";
+    output[1] = "Metode: " + switch (metode) {
+        case 1 -> "Eliminasi Gauss";
+        case 2 -> "Eliminasi Gauss-Jordan";
+        case 3 -> "Kaidah Cramer";
+        case 4 -> "Matriks Balikan";
+        default -> "Tidak valid";
+    };
+    output[2] = "Matriks Awal:\n" + aug.toString();
+    output[3] = "Hasil:\n" + hasil;
+    simpanOutput(output);
 }
 
-// ====== MAIN GUI EXAMPLE ======
-// Be sure to uncoment the section below and follow the steps written in README
+    // ===========================================================
+    // MENU 2 - DETERMINAN
+    // ===========================================================
+    private static void menuDeterminan() {
+        System.out.println("\n--- DETERMINAN MATRKS ---");
+        System.out.println("1. Metode Kofaktor");
+        System.out.println("2. Metode Reduksi Baris (OBE)");
+        System.out.print("Pilih metode: ");
+        int metode = inputInt();
 
-// import javafx.application.Application;
-// import javafx.scene.Scene;
-// import javafx.scene.control.Label;
-// import javafx.stage.Stage;
-// public class App extends Application {
+        Matrix A = inputMatrix(false);
+        double hasil = (metode == 1)
+                ? Determinan.detKofaktor(A)
+                : Determinan.detReduksiBaris(A);
 
-//     @Override
-//     public void start(Stage stage) {
-//         ModuleContoh m = new ModuleContoh();
+        System.out.println("Determinan = " + hasil);
+        String[] output = new String[4];
+        output[0] = "=== HASIL DETERMINAN ===";
+        output[1] = "Metode: " + (metode == 1 ? "Kofaktor" : "Reduksi Baris");
+        output[2] = "Matriks:\n" + A.toString();
+        output[3] = "Determinan = " + hasil;
+        simpanOutput(output);
+    }
 
-//         Label label = new Label("Hello JavaFX from Algeo 1!");
-//         Scene scene = new Scene(label, 300, 200);
+    // ===========================================================
+    // MENU 3 - INVERS MATRKS
+    // ===========================================================
+    private static void menuInvers() {
+        System.out.println("\n--- MATRIKS BALIKAN ---");
+        System.out.println("1. Metode OBE (Gauss–Jordan)");
+        System.out.println("2. Metode Adjoin");
+        System.out.print("Pilih metode: ");
+        int metode = inputInt();
 
-//         stage.setTitle("Matrix Calculator");
-//         stage.setScene(scene);
-//         stage.show();
-//     }
+        Matrix A = inputMatrix(false);
+        Matrix hasil = null;
+        
+        String [] output = new String[4];
+        try {
+            if (metode == 1) hasil = Invers.inversOBE(A);
+            else if (metode == 2) hasil = Invers.inversAdjoin(A);
+            else {
+                System.out.println("Pilihan tidak valid.");
+                return;
+            }
 
-//     public static void main(String[] args) {
-//         launch(args);
-//     }
-// }
+            if (hasil == null) {
+                System.out.println("\n Matriks tidak memiliki invers unik (singular).");
+                output[0] = "=== HASIL INVERS ===";
+                output[1] = "Metode: " + (metode == 1 ? "OBE (Gauss–Jordan)" : "Adjoin");
+                output[2] = "Matriks awal:\n" + A.toString();
+                output[3] = "Matriks tidak memiliki invers unik.";
+                simpanOutput(output);
+                return;
+            }
+
+            System.out.println("\n Invers Matriks:");
+            hasil.display();
+            output[0] = "=== HASIL INVERS ===";
+            output[1] = "Metode: " + (metode == 1 ? "OBE (Gauss–Jordan)" : "Adjoin");
+            output[2] = "Matriks awal:\n" + A.toString();
+            output[3] = "Matriks invers:\n" + hasil.toString();
+            simpanOutput(output);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    // ===========================================================
+    // MENU 4 - INTERPOLASI
+    // ===========================================================
+    private static void menuInterpolasi() {
+        System.out.println("\n--- INTERPOLASI ---");
+        System.out.println("1. Interpolasi Polinomial");
+        System.out.println("2. Interpolasi Splina Bézier Kubik");
+        System.out.print("Pilih metode: ");
+        int metode = inputInt();
+        
+        String [] output = new String[4];
+
+        if (metode == 1) {
+            System.out.print("Masukkan jumlah titik data: ");
+            int n = inputInt();
+            double[] x = new double[n];
+            double[] y = new double[n];
+
+            for (int i = 0; i < n; i++) {
+                System.out.print("x" + (i + 1) + " y" + (i + 1) + ": ");
+                x[i] = sc.nextDouble();
+                y[i] = sc.nextDouble();
+            }
+
+            Matrix coeff = Interpolasi.interpolasiPolinomial(x, y);
+            if (coeff == null) {
+                System.out.println("Interpolasi gagal (matriks tidak dapat diinvers).");
+                return;
+            }
+
+            System.out.println("\nKoefisien Polinomial:");
+            coeff.display();
+            Interpolasi.printPolynomial(coeff);
+
+            System.out.print("\nMasukkan nilai x yang ingin dihitung: ");
+            double xEval = sc.nextDouble();
+            double yEval = Interpolasi.evaluatePolynomial(coeff, xEval);
+            System.out.printf("P(%.4f) = %.6f\n", xEval, yEval);
+
+            output[0] = "=== HASIL INTERPOLASI POLINOMIAL ===";
+            output[1] = "Metode: Polinomial";
+            output[2] = ""; 
+            output[3] = ""; 
+            output[4] = "=== HASIL INTERPOLASI POLINOMIAL ===\n" + coeff.toString() + "\nP(" + xEval + ") = " + yEval;
+            simpanOutput(output);
+
+        } else if (metode == 2) {
+            System.out.print("Masukkan jumlah titik sampel: ");
+            int n = inputInt();
+            Matrix titik = new Matrix(n, 2);
+
+            for (int i = 0; i < n; i++) {
+                System.out.print("x" + (i + 1) + " y" + (i + 1) + ": ");
+                titik.setElement(i, 0, sc.nextDouble());
+                titik.setElement(i, 1, sc.nextDouble());
+            }
+
+            Matrix B = Interpolasi.interpolasiBezierKubik(titik);
+            if (B != null) {
+                System.out.println("\nTitik Kontrol Bézier Kubik:");
+                B.display();
+                output[0] = "=== HASIL INTERPOLASI BÉZIER ===";
+                output[1] = "Metode: Bézier Kubik"; 
+                output[2] = "" ; 
+                output[3] = "" ; 
+                output[4] = "=== HASIL INTERPOLASI BÉZIER ===\n" + B.toString();
+                simpanOutput(output);
+            }
+        } else {
+            System.out.println("Pilihan tidak valid.");
+        }
+    }
+
+    // ===========================================================
+    // MENU 5 - REGRESI POLINOMIAL
+    // ===========================================================
+    private static void menuRegresi() {
+        System.out.println("\n--- REGRESI POLINOMIAL ---");
+        System.out.print("Masukkan jumlah titik data: ");
+        int n = inputInt();
+        System.out.print("Masukkan jumlah variabel independen: ");
+        int k = inputInt();
+        System.out.print("Masukkan derajat polinomial: ");
+        int d = inputInt();
+
+        Matrix X = new Matrix(n, k);
+        Matrix Y = new Matrix(n, 1);
+
+        System.out.println("Masukkan data (setiap baris: x1 x2 ... xk y):");
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < k; j++) X.setElement(i, j, sc.nextDouble());
+            Y.setElement(i, 0, sc.nextDouble());
+        }
+
+        Regresi regresi = new Regresi();
+        Matrix koef = regresi.regresi(X, Y, d);
+
+        System.out.println("\nHasil Regresi:");
+        Regresi.printHasil(koef, regresi.getBasis());
+
+        String[] output = new String[4];
+        output[0] = "=== HASIL REGRESI POLINOMIAL ===";
+        output[1] = "Input yang digunakan :";
+        output[2] = "Matriks X:\n" + X.toString() + "Matriks Y:\n" + Y.toString();
+        output[3] = "Persamaan hasil: " + koef.toString();
+        simpanOutput(output);
+    }
+
+    // ===========================================================
+    // UTILITAS INPUT/OUTPUT
+    // ===========================================================
+
+    /** Membuat folder output jika belum ada */
+    private static void buatFolderOutput() {
+        File folder = new File(OUTPUT_FOLDER);
+        if (!folder.exists()) folder.mkdirs();
+    }
+
+    /** Membaca matriks dari input manual atau file */
+    private static Matrix inputMatrix(boolean augmented) {
+        while (true) {
+            System.out.println("1. Input manual");
+            System.out.println("2. Baca dari file .txt");
+            System.out.print("Pilih metode input: ");
+            int mode = inputInt();
+
+            switch (mode) {
+                case 1:
+                    System.out.print("Masukkan jumlah baris: ");
+                    int m = inputInt();
+                    System.out.print("Masukkan jumlah kolom: ");
+                    int n = inputInt();
+                    Matrix M = new Matrix(m, n);
+                    System.out.println("Masukkan elemen matriks (pisahkan dengan spasi):");
+                    for (int i = 0; i < m; i++) {
+                        for (int j = 0; j < n; j++) {
+                            while (true) {
+                                try {
+                                    String inp = sc.next();
+                                    M.setElement(i, j, parseDouble(inp));
+                                    break;
+                                } catch (NumberFormatException e) {
+                                    System.out.printf("Input harus angka. Coba lagi untuk elemen baris %d, kolom %d: ", i + 1, j + 1);
+                                } catch (ArithmeticException e) {
+                                    System.out.printf("Error: Pembagi nol. Coba lagi untuk elemen baris %d, kolom %d: ", i + 1, j + 1);
+                                }
+                            }
+                        }
+                    }
+                    return M; 
+
+                case 2:
+                    System.out.print("Masukkan path file: ");
+                    String path = sc.next();
+                    try {
+                        return Matrix.fromFile(path); 
+                    } catch (Exception e) {
+                        System.out.println("\n[!] Gagal membaca file! Path salah atau format tidak sesuai. Silakan pilih metode input lagi.\n");
+                    }
+                    break; 
+
+                default:
+                    System.out.println("Pilihan tidak valid. Silakan pilih 1 atau 2.\n");
+                    break; 
+            }
+        }
+        
+    }
+
+    /** Menyimpan hasil ke dalam file hasil.txt */
+    private static void simpanOutput(String[] isi) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(OUTPUT_FILE, true))) {
+            for (int i=0;i<isi.length;i++) out.println(isi);
+            out.println("--------------------------------------------------");
+            System.out.println(" Hasil disimpan ke " + OUTPUT_FILE);
+        } catch (IOException e) {
+            System.out.println(" Gagal menyimpan hasil!");
+        }
+    }
+
+    /** Membaca integer dari input pengguna dengan validasi */
+    private static int inputInt() {
+        while (true) {
+            try {
+                return Integer.parseInt(sc.next());
+            } catch (NumberFormatException e) {
+                System.out.print("Input tidak valid, coba lagi: ");
+            }
+        }
+    }
+
+    /** Mengubah array solusi menjadi format string */
+    private static String arrayToString(double[] arr) {
+        if (arr == null) return "Tidak ada solusi (det = 0)";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < arr.length; i++)
+            sb.append(String.format("x%d = %.6f\n", i + 1, arr[i]));
+        return sb.toString();
+    }
+
+    /** Mengubah matriks solusi (vektor kolom) menjadi format string */
+    private static String matrixSolutionToString(Matrix x) {
+        if (x == null) return "Matriks tidak memiliki invers unik atau solusi tidak dapat ditemukan.";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < x.getRows(); i++) {
+            sb.append(String.format("x%d = %.6f\n", i + 1, x.getElement(i, 0)));
+        }
+        return sb.toString();
+    }
+
+    /* Handle Kasus Input Koma, Titik, dan Pecahan */
+    private static double parseDouble(String input){
+        input = input.trim();               // Hapus spasi
+        input = input.replace(",", ".");    // Ganti koma dengan titik
+        if (input.contains("/")){
+            String[] bagi = input.split("/");
+            double first = Double.parseDouble(bagi[0]);
+            double second = Double.parseDouble(bagi[1]);
+            if (second == 0) throw new ArithmeticException("Pembagi tidak boleh nol");
+            return first/second;
+        }
+        return Double.parseDouble(input);
+    }
+
+}
