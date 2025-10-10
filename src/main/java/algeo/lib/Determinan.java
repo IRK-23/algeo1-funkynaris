@@ -66,5 +66,63 @@ public final class Determinan {
 
             return det;
         }
-    }   
+    } 
+    
+    public static double detReduksiBarisWithSteps(Matrix A) {
+        if (!Matrix.isSquare(A)) {
+            throw new IllegalArgumentException("Matriks harus persegi");
+        }
+    
+        System.out.println("\n===== Memulai Perhitungan Determinan dengan Reduksi Baris =====");
+        Matrix m = A.copy();
+        System.out.println("Matriks Awal:");
+        m.display();
+
+        int n = m.getRows();
+        int sign = 1;
+    
+        for (int i = 0; i < n; i++) {
+            int pivot = i;
+            for (int j = i + 1; j < n; j++) {
+                if (Math.abs(m.getElement(j, i)) > Math.abs(m.getElement(pivot, i))) {
+                    pivot = j;
+                }
+            }
+    
+            if (Matrix.isZero(m.getElement(pivot, i))) {
+                System.out.println("\nMatriks menjadi singular (diagonal nol), determinan adalah 0.");
+                return 0.0;
+            }
+    
+            if (pivot != i) {
+                System.out.printf("\nLangkah: Menukar R%d dengan R%d. Tanda determinan dikali -1.\n", i + 1, pivot + 1);
+                m.swapRows(pivot, i);
+                sign = -sign;
+                m.display();
+            }
+    
+            for (int j = i + 1; j < n; j++) {
+                double factor = m.getElement(j, i) / m.getElement(i, i);
+                if (!Matrix.isZero(factor)) {
+                    System.out.printf("\nLangkah: R%d = R%d - (%.3f) * R%d\n", j + 1, j + 1, factor, i + 1);
+                    m.addMultiplyOfRow(j, i, -factor);
+                    m.display();
+                }
+            }
+        }
+        
+        double det = (sign == 1) ? 1.0 : -1.0;
+        System.out.println("\nMatriks segitiga atas terbentuk. Determinan adalah perkalian diagonal:");
+        StringBuilder diagonalMultiply = new StringBuilder();
+        for (int k = 0; k < n; k++) {
+            det *= m.getElement(k, k);
+            diagonalMultiply.append(String.format("%.3f", m.getElement(k,k)));
+            if (k < n - 1) diagonalMultiply.append(" * ");
+        }
+        System.out.printf("Determinan = %d * (%s) = %.4f\n", sign, diagonalMultiply.toString(), det);
+        System.out.println("===============================================================");
+        
+        return det;
+    }
+
 }
