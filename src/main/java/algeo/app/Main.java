@@ -262,11 +262,11 @@ public class Main {
             System.out.print("Masukkan jumlah kolom: ");
             int n = inputInt();
             Matrix M = new Matrix(m, n);
-
+            System.out.println("Masukkan elemen matriks (pisahkan dengan spasi):");
             for (int i = 0; i < m; i++) {
-                System.out.print("Baris ke-" + (i + 1) + ": ");
                 for (int j = 0; j < n; j++) {
-                    M.setElement(i, j, sc.nextDouble());
+                    String inp = sc.next();
+                    M.setElement(i, j, parseDouble(inp));
                 }
             }
             return M;
@@ -311,5 +311,19 @@ public class Main {
         for (int i = 0; i < arr.length; i++)
             sb.append(String.format("x%d = %.6f\n", i + 1, arr[i]));
         return sb.toString();
+    }
+
+    /* Handle Kasus Input Koma, Titik, dan Pecahan */
+    private static double parseDouble(String input){
+        input = input.trim();               // Hapus spasi
+        input = input.replace(",", ".");    // Ganti koma dengan titik
+        if (input.contains("/")){
+            String[] bagi = input.split("/");
+            double first = Double.parseDouble(bagi[0]);
+            double second = Double.parseDouble(bagi[1]);
+            if (second == 0) throw new ArithmeticException("Pembagi tidak boleh nol");
+            return first/second;
+        }
+        return Double.parseDouble(input);
     }
 }
