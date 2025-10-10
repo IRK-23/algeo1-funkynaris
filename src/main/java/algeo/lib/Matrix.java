@@ -1,11 +1,22 @@
 package algeo.lib;
 
+import java.io.*;
+import java.util.*;
+
+/**
+ * Kelas Matrix menyediakan operasi dasar matriks
+ * seperti OBE, perkalian, transpose, dan utilitas tambahan.
+ * Kelas ini digunakan di seluruh fitur (SPL, Determinan, Invers, Interpolasi, dan Regresi).
+ */
 public class Matrix {
   private double[][] data;
   private int rows;
   private int cols;
 
-  // Konstruktor
+  // ==========================================================
+  // KONSTRUKTOR
+  // ==========================================================
+
   public Matrix(double[][] initialData) {
     if (initialData == null || initialData.length == 0 || initialData[0].length == 0) {
       throw new IllegalArgumentException("Data matriks tidak boleh kosong");
@@ -13,10 +24,10 @@ public class Matrix {
     this.rows = initialData.length;
     this.cols = initialData[0].length;
     this.data = new double[rows][cols];
-    for (int i=0;i<rows;i++) {
-      for (int j=0;j<cols;j++) {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
         this.data[i][j] = initialData[i][j];
-      } 
+      }
     }
   }
 
@@ -29,14 +40,12 @@ public class Matrix {
     this.data = new double[rows][cols];
   }
 
-  // Selektor
-  public int getRows() {
-    return this.rows;
-  }
+  // ==========================================================
+  // SELEKTOR
+  // ==========================================================
+  public int getRows() { return this.rows; }
 
-  public int getCols() {
-    return this.cols;
-  }
+  public int getCols() { return this.cols; }
 
   public double getElement(int row, int col) {
     if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
@@ -52,8 +61,11 @@ public class Matrix {
     }
     throw new IndexOutOfBoundsException("Indeks matriks tidak valid: (" + row + "," + col + ")");
   }
-  
-  // Operasi Baris Elementer
+
+  // ==========================================================
+  // OPERASI BARIS ELEMENTER (OBE)
+  // ==========================================================
+
   public void swapRows(int row1, int row2) {
     double[] temp = this.data[row1];
     this.data[row1] = this.data[row2];
@@ -61,7 +73,7 @@ public class Matrix {
   }
 
   public void multiplyRow(int row, double scalar) {
-    for (int j=0; j<this.cols; j++) {
+    for (int j = 0; j < this.cols; j++) {
       this.data[row][j] *= scalar;
     }
   }
@@ -72,7 +84,10 @@ public class Matrix {
     }
   }
 
-  // Operasi Matrix : Copy, Display (Print)
+  // ==========================================================
+  // OPERASI DASAR MATRIX
+  // ==========================================================
+
   public Matrix copy() {
     return new Matrix(this.data);
   }
@@ -87,7 +102,7 @@ public class Matrix {
     }
   }
 
-  // Operasi Matriks : Mengubah Matriks determinan menjadi Matriks Eselon Baris (Tidak mempunyai leading one!)
+  // Mengubah menjadi bentuk eselon baris (tanpa leading one)
   public Matrix toEselonMatrix() {
     Matrix m = this.copy();
     int rows = m.getRows();
@@ -95,7 +110,7 @@ public class Matrix {
     for (int j = 0; j < rows; j++) {
       int pivot = j;
       for (int i = j + 1; i < rows; i++) {
-        if(Math.abs(m.getElement(i, j)) > Math.abs(m.getElement(pivot, j))) {
+        if (Math.abs(m.getElement(i, j)) > Math.abs(m.getElement(pivot, j))) {
           pivot = i;
         }
       }
@@ -106,11 +121,10 @@ public class Matrix {
         m.addMultiplyOfRow(i, j, -factor);
       }
     }
-
     return m;
   }
 
-  // Operasi Matriks : Perkalian Matriks
+  // Perkalian dua matriks
   public static Matrix multiply(Matrix a, Matrix b) {
     if (a.getCols() != b.getRows()) {
       System.out.println("Ukuran matriks tidak valid untuk perkalian");
@@ -118,8 +132,7 @@ public class Matrix {
     }
 
     Matrix result = new Matrix(a.getRows(), b.getCols());
-
-    for (int i=0; i<a.getRows(); i++) {
+    for (int i = 0; i < a.getRows(); i++) {
       for (int j = 0; j < b.getCols(); j++) {
         double sum = 0.0;
         for (int k = 0; k < a.getCols(); k++) {
@@ -131,48 +144,121 @@ public class Matrix {
     return result;
   }
 
-  // Cek Matriks Persegi
+  // ==========================================================
+  // OPERASI MATRIKS TAMBAHAN
+  // ==========================================================
+
   public static boolean isSquare(Matrix A) {
-    if (A == null ||  A.rows == 0 || A.rows != A.cols) {
-        return false;
-    }   
-    else return true;
+    return A != null && A.rows == A.cols;
   }
 
-  // Mengecek nol (Untuk kemungkinan komputer tidak presisi)
   public static final double EPS = 1e-12;
+
   public static boolean isZero(double x) {
     return Math.abs(x) <= EPS;
   }
 
-  // Matriks Minor
-  public static Matrix minorOf (Matrix A, int row, int col) {
+  // Menghasilkan matriks minor
+  public static Matrix minorOf(Matrix A, int row, int col) {
     int n = A.rows;
-    Matrix minor = new Matrix (n-1, n-1);
+    Matrix minor = new Matrix(n - 1, n - 1);
     int mi = 0;
     for (int i = 0; i < n; i++) {
-        if (i == row) continue;
-        int mj = 0;
-        for (int j = 0; j < n; j++) {
-            if (j == col) continue; 
-            minor.setElement(mi,mj,A.getElement(i, j));
-            mj++;
-        }
-        mi++;
+      if (i == row) continue;
+      int mj = 0;
+      for (int j = 0; j < n; j++) {
+        if (j == col) continue;
+        minor.setElement(mi, mj, A.getElement(i, j));
+        mj++;
+      }
+      mi++;
     }
     return minor;
   }
 
   // Mengembalikan transpose dari matriks ini
-public Matrix transpose() {
-  Matrix result = new Matrix(this.cols, this.rows);
-  for (int i = 0; i < this.rows; i++) {
-    for (int j = 0; j < this.cols; j++) {
-      result.setElement(j, i, this.data[i][j]);
+  public Matrix transpose() {
+    Matrix result = new Matrix(this.cols, this.rows);
+    for (int i = 0; i < this.rows; i++) {
+      for (int j = 0; j < this.cols; j++) {
+        result.setElement(j, i, this.data[i][j]);
+      }
     }
+    return result;
   }
-  return result;
-}
 
+  // ==========================================================
+  // FUNGSI TAMBAHAN UNTUK MAIN
+  // ==========================================================
 
+  // Mengambil submatriks dari baris/kolom tertentu (end tidak inklusif)
+  public Matrix subMatrix(int startRow, int startCol, int endRow, int endCol) {
+    int newRows = endRow - startRow;
+    int newCols = endCol - startCol;
+    Matrix result = new Matrix(newRows, newCols);
+    for (int i = 0; i < newRows; i++) {
+      for (int j = 0; j < newCols; j++) {
+        result.setElement(i, j, this.data[startRow + i][startCol + j]);
+      }
+    }
+    return result;
+  }
+
+  // Mengambil satu kolom sebagai vektor kolom
+  public Matrix getColVector(int colIndex) {
+    if (colIndex < 0 || colIndex >= this.cols) {
+      throw new IndexOutOfBoundsException("Indeks kolom tidak valid");
+    }
+    Matrix result = new Matrix(this.rows, 1);
+    for (int i = 0; i < this.rows; i++) {
+      result.setElement(i, 0, this.data[i][colIndex]);
+    }
+    return result;
+  }
+
+  // Membaca matriks dari file teks
+  // Format: setiap baris = elemen dipisahkan spasi
+  public static Matrix fromFile(String path) throws IOException {
+    BufferedReader reader = new BufferedReader(new FileReader(path));
+    String line;
+    List<double[]> rows = new ArrayList<>();
+
+    while ((line = reader.readLine()) != null) {
+      line = line.trim();
+      if (line.isEmpty()) continue;
+      String[] tokens = line.split("\\s+");
+      double[] row = new double[tokens.length];
+      for (int i = 0; i < tokens.length; i++) {
+        row[i] = Double.parseDouble(tokens[i]);
+      }
+      rows.add(row);
+    }
+    reader.close();
+
+    if (rows.isEmpty()) throw new IOException("File kosong atau format salah");
+
+    int m = rows.size();
+    int n = rows.get(0).length;
+    double[][] data = new double[m][n];
+    for (int i = 0; i < m; i++) {
+      if (rows.get(i).length != n)
+        throw new IOException("Baris memiliki panjang berbeda");
+      data[i] = rows.get(i);
+    }
+    return new Matrix(data);
+  }
+
+  // Override toString untuk tampilan matriks rapi
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < this.rows; i++) {
+      sb.append("| ");
+      for (int j = 0; j < this.cols; j++) {
+        sb.append(String.format("%8.3f ", this.data[i][j]));
+      }
+      sb.append("|\n");
+    }
+    return sb.toString();
+  }
 }
