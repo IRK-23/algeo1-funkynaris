@@ -272,8 +272,12 @@ public class App {
 
         System.out.println("Masukkan data (setiap baris: x1 x2 ... xk y):");
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < k; j++) X.setElement(i, j, sc.nextDouble());
-            Y.setElement(i, 0, sc.nextDouble());
+            for (int j = 0; j < k; j++) {
+                String inp = sc.next();
+                X.setElement(i, j, parseDouble(inp));
+            }
+            String inp2 = sc.next();
+            Y.setElement(i, 0, parseDouble(inp2));
         }
 
         Regresi regresi = new Regresi();
