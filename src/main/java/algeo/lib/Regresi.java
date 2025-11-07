@@ -20,10 +20,8 @@ public class Regresi {
     }
     private static void gen(int idx, int p, int rem, int[] cur, List<int[]> out) {
         if (idx == p - 1) {
-            for (int e = 0; e <= rem; e++) {
-                cur[idx] = e;
-                out.add(cur.clone());
-            }
+            cur[idx] = rem;
+            out.add(cur.clone());
             return;
         }
         for (int e = 0; e <= rem; e++) {
@@ -46,15 +44,15 @@ public class Regresi {
             throw new IllegalStateException("Perkalian matriks gagal (cek dimensi).");
         }
         System.out.println("Perkalian Matriks sesuai dengan persamaan..."); // Tahap nomor 2
-        // Hitung totalnya dengan Error Handling
-        try {
-            Matrix Xinv = Invers.inversOBE(XtX);
+        // Hitung totalnya dengan invers atau metode lain jika tidak bisa
+        Matrix Xinv = Invers.inversOBE(XtX);
+        if (Xinv != null) {
             Matrix result = Matrix.multiply(Xinv, Xty);
             Xinv.display();
-            System.out.println("Matriks di atas akan dikalikan dengan Matriks di bawah ini: ");
+            System.out.println("Matriks di atas akan dikalikan untuk menghasilkan Matriks di bawah ini: ");
             result.display();
             return result;
-        } catch (ArithmeticException e) {
+        } else{
             // Tanpa invers
             int m = XtX.getRows();
             Matrix aug = new Matrix (m, m + 1);
